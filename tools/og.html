@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../public/styles.css">
+<style>
+body{margin:0;width:1200px;height:630px;overflow:hidden}
+.og{width:1200px;height:630px;display:flex;align-items:stretch;border:0}
+.l{flex:1;padding:56px 0 48px 64px;display:flex;flex-direction:column;justify-content:space-between}
+.l h1{margin:0;font-family:var(--display);font-weight:400;font-size:230px;line-height:.82}
+.l p{margin:0;font-family:var(--display);font-size:52px;line-height:1.05;text-transform:uppercase}
+.l .url{font-family:var(--mono);font-weight:600;font-size:22px;letter-spacing:.06em;text-transform:uppercase;background:#FF4F00;align-self:flex-start;padding:10px 14px;border:2px solid #111}
+.r{width:400px;position:relative;overflow:hidden;border-left:2px solid #111}
+.r .counter{position:absolute;left:-60px;top:-135px;width:520px;border:0}
+</style></head><body>
+<div class="og"><div class="l"><h1>$TICK</h1><p>One price. One pool.<br>Zero team.</p><span class="url">inscribetick.com · Elysium</span></div>
+<div class="r"><div class="counter"><img src="../public/assets/counter.webp" alt=""><div id="drums"></div></div></div></div>
+<script>
+const B=[[314,370],[384,442],[456,514],[528,586],[600,654],[670,726],[742,794]],v="0000001";
+B.forEach(([a,b],i)=>{const d=document.createElement('div');d.className='drum'+(i==6?' last':'');d.style.top=a/11.68+'%';d.style.height=(b-a)/11.68+'%';
+const s=document.createElement('div');s.className='strip';s.style.transform='translateY(-'+(+v[i])*100/11+'%)';
+[0,1,2,3,4,5,6,7,8,9,0].forEach(n=>{const e=document.createElement('span');e.textContent=n;s.appendChild(e)});d.appendChild(s);drums.appendChild(d)});
+</script></body></html>
