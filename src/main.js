@@ -421,7 +421,7 @@ async function onViewClick() {
   try {
     await state.provider.request({
       method: "wallet_watchAsset",
-      params: { type: "ERC20", options: { address: state.token, symbol: "TICK", decimals: 18 } },
+      params: { type: "ERC20", options: { address: state.token, symbol: "TICK", decimals: 18, image: "https://inscribetick.com/assets/tick-logo-256.png" } },
     });
   } catch (e) {
     say(friendly(e));
