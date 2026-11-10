@@ -168,43 +168,107 @@ window.addEventListener("eip6963:announceProvider", (ev) => {
 });
 window.dispatchEvent(new Event("eip6963:requestProvider"));
 
+// The four wallets most $TICK minters use. Matched by EIP-6963 rdns or name.
+const KNOWN_WALLETS = [
+  { key: "rabby", name: "Rabby", url: "https://rabby.io", match: /rabby/i },
+  { key: "metamask", name: "MetaMask", url: "https://metamask.io", match: /metamask/i },
+  { key: "okx", name: "OKX Wallet", url: "https://web3.okx.com", match: /okx|okex/i },
+  { key: "bitget", name: "Bitget Wallet", url: "https://web3.bitget.com", match: /bitget|bitkeep/i },
+];
+const WALLET_KEY = "tick:wallet";
+const isMobile = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+function findKnown(p) {
+  const id = `${p.info.rdns || ""} ${p.info.name || ""}`;
+  return KNOWN_WALLETS.find((w) => w.match.test(id)) || null;
+}
+function rememberWallet(rdns) {
+  try { if (rdns) localStorage.setItem(WALLET_KEY, rdns); } catch (_) {}
+}
+function lastWallet() {
+  try { return localStorage.getItem(WALLET_KEY); } catch (_) { return null; }
+}
+
+function walletButton(label, icon, onClick, tag) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "b3d";
+  if (icon && /^data:image\//.test(icon)) {
+    const img = document.createElement("img");
+    img.src = icon;
+    img.alt = "";
+    b.appendChild(img);
+  }
+  b.appendChild(document.createTextNode(label));
+  if (tag) {
+    const t = document.createElement("span");
+    t.className = "wallet-tag";
+    t.textContent = tag;
+    b.appendChild(t);
+  }
+  b.addEventListener("click", onClick);
+  return b;
+}
+
 function chooseProvider() {
   return new Promise((resolve) => {
-    if (providers.length === 1) return resolve(providers[0].provider);
-    if (providers.length === 0) return resolve(window.ethereum || null);
     const dlg = $("walletDialog");
     const list = $("walletList");
+    const hint = $("walletHint");
     list.replaceChildren();
-    for (const p of providers) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "b3d";
-      if (p.info.icon && /^data:image\//.test(p.info.icon)) {
-        const img = document.createElement("img");
-        img.src = p.info.icon;
-        img.alt = "";
-        b.appendChild(img);
+    const done = (choice) => { resolve(choice); dlg.close(); };
+    const used = new Set();
+
+    for (const w of KNOWN_WALLETS) {
+      const p = providers.find((x) => !used.has(x) && findKnown(x) === w);
+      if (p) {
+        used.add(p);
+        list.appendChild(walletButton(w.name, p.info.icon, () => done({ provider: p.provider, rdns: p.info.rdns }), "Detected"));
+      } else {
+        const a = document.createElement("a");
+        a.className = "b3d install";
+        a.href = w.url;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = w.name;
+        const t = document.createElement("span");
+        t.className = "wallet-tag";
+        t.textContent = "Install ↗";
+        a.appendChild(t);
+        list.appendChild(a);
       }
-      b.appendChild(document.createTextNode(p.info.name));
-      b.addEventListener("click", () => { dlg.close(); resolve(p.provider); });
-      list.appendChild(b);
     }
-    $("walletClose").onclick = () => { dlg.close(); resolve(null); };
+    // Any other wallet the browser announced (Phantom, Coinbase, ...)
+    for (const p of providers) {
+      if (used.has(p)) continue;
+      list.appendChild(walletButton(p.info.name, p.info.icon, () => done({ provider: p.provider, rdns: p.info.rdns }), "Detected"));
+    }
+    // Older wallets that only inject window.ethereum
+    if (providers.length === 0 && window.ethereum) {
+      list.appendChild(walletButton("Browser wallet", null, () => done({ provider: window.ethereum, rdns: null }), "Detected"));
+    }
+
+    hint.textContent = providers.length === 0 && !window.ethereum
+      ? (isMobile()
+        ? "On mobile, open inscribetick.com in the built-in browser of your wallet app (Rabby, MetaMask, OKX or Bitget), then connect."
+        : "No wallet detected. Install one of the wallets above, then refresh this page.")
+      : "";
+    hint.hidden = !hint.textContent;
+
+    $("walletClose").onclick = () => done(null);
+    dlg.onclose = () => resolve(null); // Esc key; resolving twice is harmless
     dlg.showModal();
   });
 }
 
 async function connect() {
-  const provider = await chooseProvider();
-  if (!provider) {
-    if (providers.length === 0 && !window.ethereum) {
-      say("No wallet found. Install a browser wallet such as Rabby or MetaMask, or open inscribetick.com in your wallet app's browser.");
-    }
-    return;
-  }
+  const choice = await chooseProvider();
+  if (!choice) return;
+  const provider = choice.provider;
   try {
     const accounts = await provider.request({ method: "eth_requestAccounts" });
     rememberDisconnected(false);
+    rememberWallet(choice.rdns);
     setProvider(provider);
     state.account = accounts[0] ? getAddress(accounts[0]) : null;
     state.walletChainId = parseInt(await provider.request({ method: "eth_chainId" }), 16);
@@ -581,8 +645,11 @@ function boot() {
 
   // silently restore an already-authorised wallet
   setTimeout(async () => {
-    const p = providers[0] ? providers[0].provider : window.ethereum;
-    if (!p || wasDisconnected()) return;
+    if (wasDisconnected()) return;
+    const last = lastWallet();
+    const known = (last && providers.find((x) => x.info.rdns === last)) || (providers.length === 1 ? providers[0] : null);
+    const p = known ? known.provider : (providers.length === 0 ? window.ethereum : null);
+    if (!p) return;
     try {
       const accs = await p.request({ method: "eth_accounts" });
       if (accs && accs[0]) {
