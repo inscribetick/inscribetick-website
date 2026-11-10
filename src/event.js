@@ -103,7 +103,7 @@ export function initEvent(C) {
         setCount(j.count);
         try { localStorage.setItem(SENT_KEY, JSON.stringify({ handle: hm[1], wallet })); } catch (_) {}
         form.reset();
-        say(`You're in, @${hm[1]}. Winners are checked by hand and announced on X. If you win, claim on this page when the mint opens.`, "ok");
+        say(`You're in, @${hm[1]}. Every entry is checked by hand and the 500 early supporters are announced on X. If you're selected, claim on this page when the mint opens.`, "ok");
       } else {
         if (j.error === "closed") open = false;
         say(ERRORS[j.error] || "Something went wrong. Please try again.", "err");

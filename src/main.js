@@ -453,7 +453,7 @@ function renderClaim(phase) {
   const btn = $("claimBtn");
   const info = $("claimInfo");
   let label = "Check my wallet";
-  let text = "Winners of the X event can claim here once the mint opens. One claim per wallet.";
+  let text = "Selected early supporters can claim here once the mint opens. One claim per wallet.";
   let enabled = false;
   const left = FREE_CLAIMS - state.claimed;
   if (state.claimsError) {
@@ -465,27 +465,27 @@ function renderClaim(phase) {
     text = "There are no free claims in this mint.";
     label = "No free claims";
   } else if (!state.claims) {
-    text = "Loading the winners list…";
+    text = "Loading the early supporters list…";
   } else if (!state.account) {
-    text = `${fmtInt(state.claims.count)} wallets are on the winners list. Connect to check yours.`;
+    text = `${fmtInt(state.claims.count)} wallets are on the early supporters list. Connect to check yours.`;
     label = "Connect wallet";
     enabled = phase !== "done";
   } else if (!state.claims.has(state.account)) {
-    text = "This wallet is not on the winners list.";
+    text = "This wallet is not on the early supporters list.";
     label = "Not on the list";
   } else if (state.hasClaimed) {
     text = "This wallet already claimed its 50,000 $TICK.";
     label = "Claimed ✓";
   } else if (state.walletChainId !== chain.id) {
-    text = "You are on the winners list. Switch to Elysium to claim.";
+    text = "You are an early supporter. Switch to Elysium to claim.";
     label = "Switch to Elysium";
     enabled = true;
   } else if (phase === "upcoming") {
-    text = `You are on the winners list. Claiming opens with the mint, in ${countdown(state.start - now())}.`;
+    text = `You are an early supporter. Claiming opens with the mint, in ${countdown(state.start - now())}.`;
     label = "Opens with the mint";
   } else if (phase === "open") {
     if (left <= 0) { text = "All 500 free claims have been taken."; label = "All claimed"; }
-    else { text = `You are on the winners list. ${fmtInt(left)} of ${FREE_CLAIMS} claims left. Gas only, no HYPE payment.`; label = "Claim 50,000 $TICK"; enabled = true; }
+    else { text = `You are an early supporter. ${fmtInt(left)} of ${FREE_CLAIMS} claims left. Gas only, no HYPE payment.`; label = "Claim 50,000 $TICK"; enabled = true; }
   } else {
     text = "The claim window has closed. Unclaimed $TICK was burned.";
     label = "Claim closed";
@@ -676,7 +676,7 @@ const ERROR_TEXT = {
   MintStillRunning: "The mint is still running.",
   FinalizeExpired: "The time to build the pool has passed. Refunds are open.",
   RefundNotAvailable: "Refunds are not available.",
-  NotOnList: "This wallet is not on the winners list.",
+  NotOnList: "This wallet is not on the early supporters list.",
   AlreadyClaimed: "This wallet already claimed.",
   ClaimsExhausted: "All 500 free claims have been taken.",
   NothingToRefund: "This wallet has nothing to refund.",
