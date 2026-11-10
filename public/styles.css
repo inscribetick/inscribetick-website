@@ -192,3 +192,24 @@ dialog.wallets h2 { margin: 0 0 16px; font-family: var(--display); font-weight: 
 .wallet-list .install { background: transparent; color: var(--muted); border-style: dashed; box-shadow: none; }
 .wallet-list .install:hover { color: var(--ink); transform: none; box-shadow: none; background: var(--card); }
 .wallet-hint { margin: 0 0 18px; font-family: var(--sans); font-size: 14px; line-height: 1.5; }
+
+/* Intro gate */
+html.intro-on, html.intro-on body { overflow: hidden; }
+html.intro-on body > :not(#intro) { visibility: hidden; }
+#intro { position: fixed; inset: 0; z-index: 1000; background-color: var(--paper);
+  background-image: repeating-linear-gradient(to right, transparent 0 39px, rgba(17,17,17,.13) 39px 40px);
+  display: flex; align-items: center; justify-content: center; transition: opacity .45s ease, transform .45s ease; }
+#intro.leaving { opacity: 0; transform: scale(1.02); pointer-events: none; }
+#intro .intro-video { width: 100%; height: 100%; object-fit: contain; display: block; }
+#intro .intro-video.fill { object-fit: cover; }
+#intro .intro-skip { position: absolute; top: 20px; right: 20px; }
+#intro .intro-enter { position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
+  min-height: 56px; padding: 0 28px; font-size: 15px; animation: intro-pop .35s cubic-bezier(.2,1.4,.4,1) backwards; }
+#intro .intro-enter:hover { transform: translate(calc(-50% - 2px), calc(-50% - 2px)); }
+#intro .intro-enter:active { transform: translate(calc(-50% + 5px), calc(-50% + 5px)); }
+#intro .intro-enter.left { transform: translate(0, -50%); }
+#intro .intro-enter.left:hover { transform: translate(-2px, calc(-50% - 2px)); }
+#intro .intro-enter.left:active { transform: translate(5px, calc(-50% + 5px)); }
+#intro [hidden] { display: none; }
+@keyframes intro-pop { from { opacity: 0; margin-top: 16px; } to { opacity: 1; margin-top: 0; } }
+@media (prefers-reduced-motion: reduce) { #intro, #intro .intro-enter { transition: none; animation: none; } }

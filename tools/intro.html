@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>$TICK intro (render source)</title>
+<style>
+@font-face { font-family: "Anton"; src: url("../public/assets/fonts/anton-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; src: url("../public/assets/fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
+html, body { margin: 0; overflow: hidden; }
+#stage { position: relative; overflow: hidden; background-color: #F2EFE6;
+  background-image: repeating-linear-gradient(to right, transparent 0px, transparent 39px, rgba(17,17,17,.13) 39px, rgba(17,17,17,.13) 40px);
+  font-family: "Anton", sans-serif; color: #111; }
+#card { position: absolute; border: 3px solid #111; background: #EEE7DB; box-shadow: 12px 12px 0 #111; overflow: hidden; }
+#card img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.drum { position: absolute; left: 44.5%; width: 7.9%; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%); }
+.strip { position: absolute; left: 0; right: 0; top: 0; height: 1100%; display: flex; flex-direction: column;
+  font-family: "IBM Plex Mono", monospace; font-weight: 600; line-height: 1; color: #EDE6D8; }
+.strip span { height: 9.0909%; display: flex; align-items: center; justify-content: center; }
+.drum.last .strip { color: #FF4F00; }
+.t { position: absolute; white-space: nowrap; text-transform: uppercase; }
+#title { line-height: .82; letter-spacing: -.01em; }
+#l1, #l2, #l3 { line-height: 1.04; }
+#l3 span { position: relative; z-index: 1; }
+#hl { position: absolute; left: -10px; top: 2%; bottom: -4%; background: #FF4F00; z-index: 0; }
+#sub { font-family: "IBM Plex Mono", monospace; font-weight: 600; letter-spacing: .08em; }
+#tape { position: absolute; left: 0; right: 0; bottom: 0; background: #FF4F00; border-top: 3px solid #111; overflow: hidden;
+  font-family: "IBM Plex Mono", monospace; font-weight: 600; letter-spacing: .04em; white-space: nowrap; display: flex; align-items: center; }
+#tapeText { position: absolute; left: 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="card"><img id="art" src="../public/assets/counter.webp" alt=""><div id="drums"></div></div>
+  <div class="t" id="title">$TICK</div>
+  <div class="t" id="l1">One price.</div>
+  <div class="t" id="l2">One pool.</div>
+  <div class="t" id="l3"><div id="hl"></div><span>Zero team.</span></div>
+  <div class="t" id="sub">Fair-launch inscription on Elysium</div>
+  <div id="tape"><div id="tapeText"></div></div>
+</div>
+<script>
+const P = new URLSearchParams(location.search);
+const W = +P.get("w") || 1920, H = +P.get("h") || 1080;
+const PORTRAIT = H > W;
+const $ = (id) => document.getElementById(id);
+const stage = $("stage");
+stage.style.width = W + "px"; stage.style.height = H + "px";
+
+const BANDS = [[314, 370], [384, 442], [456, 514], [528, 586], [600, 654], [670, 726], [742, 794]];
+const strips = BANDS.map(([a, b], i) => {
+  const d = document.createElement("div");
+  d.className = "drum" + (i === 6 ? " last" : "");
+  d.style.top = (a / 1168) * 100 + "%";
+  d.style.height = ((b - a) / 1168) * 100 + "%";
+  const s = document.createElement("div");
+  s.className = "strip";
+  for (const n of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0]) { const e = document.createElement("span"); e.textContent = n; s.appendChild(e); }
+  d.appendChild(s); $("drums").appendChild(d);
+  return s;
+});
+
+const TAPE = " TICK ▲ 1,000,000,000 SUPPLY  /  80% PUBLIC MINT  /  20% LOCKED LP  /  0% TEAM  /  100,000 PER INSCRIBE  /  MAX 10 PER WALLET  /  ELYSIUM 99901  / ";
+$("tapeText").textContent = TAPE.repeat(4);
+
+// ---- layout -------------------------------------------------------------
+const L = PORTRAIT ? {
+  cardA: { h: 1000, top: 420 }, cardB: { h: 740, top: 90 },
+  title: { size: 280, top: 900 }, lines: { size: 80, tops: [1170, 1256, 1342] },
+  sub: { size: 26, top: 1466 }, tape: 84, tapeSize: 26, center: true,
+} : {
+  cardA: { h: 820, top: 110 }, cardB: { h: 760, top: 120, left: 210 },
+  title: { size: 330, top: 175 }, lines: { size: 80, tops: [520, 606, 692] },
+  sub: { size: 26, top: 822 }, tape: 76, tapeSize: 24, center: false,
+};
+const ratio = 784 / 1168;
+const textLeft = PORTRAIT ? 0 : L.cardB.left + L.cardB.h * ratio + 120;
+
+for (const id of ["title", "l1", "l2", "l3", "sub"]) {
+  const el = $(id);
+  if (L.center) { el.style.left = "0"; el.style.width = W + "px"; el.style.textAlign = "center"; }
+  else el.style.left = textLeft + "px";
+}
+$("title").style.fontSize = L.title.size + "px";
+["l1", "l2", "l3"].forEach((id, i) => { $(id).style.fontSize = L.lines.size + "px"; });
+$("sub").style.fontSize = L.sub.size + "px";
+$("tape").style.height = L.tape + "px";
+$("tapeText").style.fontSize = L.tapeSize + "px";
+if (L.center) { $("l3").style.display = "flex"; $("l3").style.justifyContent = "center"; }
+
+// ---- easing helpers ----------------------------------------------------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+const easeInOut = (x) => (x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const backOut = (x) => { const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const lerp = (a, b, x) => a + (b - a) * x;
+
+function cardBox(t) {
+  const m = easeInOut(prog(t, 2.7, 3.35));
+  const h = lerp(L.cardA.h, L.cardB.h, m);
+  const w = h * ratio;
+  const leftA = (W - L.cardA.h * ratio) / 2;
+  const leftB = PORTRAIT ? (W - L.cardB.h * ratio) / 2 : L.cardB.left;
+  return { h, w, left: lerp(leftA, leftB, m), top: lerp(L.cardA.top, L.cardB.top, m) };
+}
+
+const COUNT_FROM = 0.35, COUNT_TO = 2.5, TARGET = 8000;
+function counter(t) {
+  const x = prog(t, COUNT_FROM, COUNT_TO);
+  const v = TARGET * easeOut(x);
+  const speed = x < 1 ? TARGET * 3 * Math.pow(1 - x, 2) / (COUNT_TO - COUNT_FROM) : 0; // counts per second
+  return { v, speed };
+}
+
+window.render = function (t) {
+  // card
+  const intro = easeOut(prog(t, 0, .5));
+  const c = cardBox(t);
+  const card = $("card");
+  card.style.width = c.w + "px"; card.style.height = c.h + "px";
+  card.style.left = c.left + "px"; card.style.top = c.top + (1 - intro) * 50 + "px";
+  card.style.opacity = intro;
+  // drums (odometer)
+  const { v, speed } = counter(t);
+  const fs = c.w * 0.082;
+  strips.forEach((s, i) => {
+    const p = Math.pow(10, 6 - i);
+    const base = Math.floor(v / p) % 10;
+    const f = p === 1 ? v % 1 : clamp((v % p) - (p - 1), 0, 1);
+    s.style.fontSize = fs + "px";
+    s.style.transform = `translateY(-${((base + f) * 100) / 11}%)`;
+    const blur = Math.min(5, (speed / p) * 0.012);
+    s.style.filter = blur > .3 ? `blur(${blur}px)` : "none";
+  });
+  // title slam
+  const tp = prog(t, 3.0, 3.4);
+  const title = $("title");
+  const shake = t > 3.4 && t < 3.7 ? Math.sin((t - 3.4) * 90) * 6 * (1 - prog(t, 3.4, 3.7)) : 0;
+  title.style.top = L.title.top + "px";
+  title.style.opacity = clamp(tp * 3);
+  title.style.transform = `translateX(${shake}px) scale(${lerp(1.35, 1, backOut(tp))})`;
+  title.style.transformOrigin = L.center ? "50% 60%" : "0% 60%";
+  // tagline
+  [["l1", 3.6], ["l2", 3.85], ["l3", 4.1]].forEach(([id, at], i) => {
+    const q = easeOut(prog(t, at, at + .3));
+    const el = $(id);
+    el.style.top = L.lines.tops[i] + (1 - q) * 40 + "px";
+    el.style.opacity = q;
+  });
+  const hl = $("hl");
+  const label = $("l3").querySelector("span");
+  hl.style.width = (label.offsetWidth + 20) * easeOut(prog(t, 4.35, 4.65)) + "px";
+  if (L.center) hl.style.left = ($("l3").offsetWidth - label.offsetWidth) / 2 - 10 + "px";
+  // sub
+  const sq = easeOut(prog(t, 4.7, 5.0));
+  $("sub").style.top = L.sub.top + (1 - sq) * 20 + "px";
+  $("sub").style.opacity = sq;
+  // tape
+  const tq = easeOut(prog(t, 4.4, 4.85));
+  $("tape").style.transform = `translateY(${(1 - tq) * (L.tape + 10)}px)`;
+  $("tapeText").style.transform = `translateX(${-t * 140}px)`;
+};
+
+window.ready = Promise.all([document.fonts.ready, new Promise((r) => ($("art").complete ? r() : ($("art").onload = r)))]);
+window.render(+P.get("t") || 0);
+</script>
+</body>
+</html>
