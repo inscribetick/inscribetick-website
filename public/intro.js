@@ -1,15 +1,10 @@
-// Intro gate: plays a short preview video once per browser session before the main page.
+// Intro gate: plays a short preview video every time the site is opened, before the main page.
 // Loaded synchronously in <head> so the main page never flashes before the intro.
 (function () {
-  var KEY = "tick:intro-seen";
   var root = document.documentElement;
-  var seen = false;
-  try { seen = sessionStorage.getItem(KEY) === "1"; } catch (e) {}
   // Deep links (e.g. inscribetick.com/#mint) go straight to the page.
-  if (seen || location.hash.length > 1) return;
+  if (location.hash.length > 1) return;
   root.classList.add("intro-on");
-
-  function markSeen() { try { sessionStorage.setItem(KEY, "1"); } catch (e) {} }
 
   document.addEventListener("DOMContentLoaded", function () {
     var portrait = window.innerHeight > window.innerWidth;
@@ -61,7 +56,6 @@
     function close() {
       if (closed) return;
       closed = true;
-      markSeen();
       box.classList.add("leaving");
       root.classList.remove("intro-on");
       document.removeEventListener("keydown", onKey);

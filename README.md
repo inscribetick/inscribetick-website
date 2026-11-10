@@ -19,7 +19,7 @@ src/               ← source code for app.js
 - **While `tickMint` in `config.js` is empty:** the site runs in *coming soon* mode. The hero counter ticks and the mint button is disabled.
 - **Once `tickMint` holds the TickMint address:** the site reads the contract automatically: countdown to the mint, live progress, price in HYPE, all three contract addresses, wallet connection, minting 1–10 inscribes, a *Build the pool* button after the mint ends, and a refund button if the safety net ever opens.
 
-Intro: on the first visit of each browser session, a 6-second intro video (`assets/intro-landscape.mp4` / `intro-portrait.mp4`, handled by `intro.js`) plays before the page, with *Skip intro* and *Enter $TICK* buttons. Links with a section anchor (e.g. `/#mint`) skip it. The video is rendered from `tools/intro.html`.
+Intro: every time the site is opened, a 6-second intro video (`assets/intro-landscape.mp4` / `intro-portrait.mp4`, handled by `intro.js`) plays before the page, with *Skip intro* and *Enter $TICK* buttons. Links with a section anchor (e.g. `/#mint`) skip it. The video is rendered from `tools/intro.html`.
 
 Security: the page carries its own Content-Security-Policy (scripts only from this site) and refuses to run inside a frame on another site.
 
