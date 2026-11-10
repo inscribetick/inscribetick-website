@@ -16,7 +16,7 @@ window.TICK_CONFIG = {
 
   // Free-claim event
   // Web app URL of the Google Apps Script (tools/event-sheet.gs). Leave empty to show "opening soon".
-  entryUrl: "",
+  entryUrl: "https://script.google.com/macros/s/AKfycbzNngjV0BhQ0lJh_yrwBlroUZjIMXAXBxeHQvwePLldRn7FiOMZPb7rihxmZmWWBAw/exec",
   // The event post on X that people must repost and reply to.
   eventPostUrl: "https://x.com/ticksdotcom/status/2120063068680139123",
   // When entries close (UTC, ISO format), e.g. "2026-11-14T14:00:00Z". Empty = no countdown shown.
