@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>$TICK early supporters promo (render source)</title>
+<style>
+@font-face { font-family: "Anton"; src: url("../public/assets/fonts/anton-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Plex"; src: url("../public/assets/fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
+@font-face { font-family: "PlexR"; src: url("../public/assets/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); font-weight: 500; }
+html, body { margin: 0; overflow: hidden; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background-color: #F2EFE6;
+  background-image: repeating-linear-gradient(to right, transparent 0 39px, rgba(17,17,17,.13) 39px 40px);
+  font-family: "Anton", sans-serif; color: #111; }
+.a { position: absolute; white-space: nowrap; }
+#coin { left: 120px; top: 170px; width: 700px; }
+#shadow { left: 200px; top: 820px; width: 560px; height: 70px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(17,17,17,.30), rgba(17,17,17,0)); }
+#kicker { left: 930px; top: 118px; font-family: "Plex"; font-size: 30px; letter-spacing: .14em; background: #111; color: #F2EFE6; padding: 10px 18px; }
+#big { left: 922px; top: 196px; font-size: 330px; line-height: .86; letter-spacing: -.01em; }
+#big .unit { font-size: 120px; margin-left: 18px; vertical-align: 12px; }
+#each { left: 930px; top: 494px; font-size: 92px; line-height: 1; text-transform: uppercase; }
+#free { left: 930px; top: 596px; font-size: 120px; line-height: 1; text-transform: uppercase; }
+#free span { position: relative; z-index: 1; }
+#hl { position: absolute; left: -14px; top: 4%; bottom: -6%; width: 0; background: #FF4F00; z-index: 0; }
+.step { left: 932px; font-family: "PlexR"; font-weight: 500; font-size: 32px; display: flex; align-items: center; gap: 18px; }
+.step b { font-family: "Plex"; display: inline-grid; place-items: center; width: 50px; height: 50px; background: #111; color: #F2EFE6; box-shadow: 4px 4px 0 #FF4F00; font-size: 26px; }
+#tape { left: 0; right: 0; bottom: 0; height: 84px; background: #FF4F00; border-top: 3px solid #111; overflow: hidden; display: flex; align-items: center; }
+#tapeText { position: absolute; left: 0; font-family: "Plex"; font-size: 30px; letter-spacing: .04em; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="a" id="shadow"></div>
+  <img class="a" id="coin" src="../public/assets/tick-coin-3d.png" alt="">
+  <div class="a" id="kicker">EARLY SUPPORTERS</div>
+  <div class="a" id="big"><span id="num">000</span><span class="unit">WALLETS</span></div>
+  <div class="a" id="each">× 50,000 $TICK each</div>
+  <div class="a" id="free"><div id="hl"></div><span>Free.</span></div>
+  <div class="a step" id="s1"><b>1</b>Repost the post</div>
+  <div class="a step" id="s2"><b>2</b>Reply with your Elysium wallet</div>
+  <div class="a step" id="s3"><b>3</b>Submit at inscribetick.com</div>
+  <div class="a" id="tape"><div id="tapeText"></div></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const TAPE = "  CLOSES THU 12 NOV · 14:00 UTC  /  BLUE CHECK ONLY  /  1 ENTRY PER ACCOUNT  /  INSCRIBETICK.COM  /";
+$("tapeText").textContent = TAPE.repeat(5);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+const backOut = (x) => { const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const lerp = (a, b, x) => a + (b - a) * x;
+const STEP_TOPS = [762, 828, 894];
+
+window.render = function (t) {
+  // coin: drop in, then a slow float and wobble
+  const ci = easeOut(prog(t, 0, 0.7));
+  const float = Math.sin(t * 1.6) * 10;
+  const coin = $("coin");
+  coin.style.opacity = ci;
+  coin.style.transform = `translateY(${(1 - ci) * -120 + float}px) rotate(${(1 - ci) * -25 + Math.sin(t * 1.1) * 3}deg) scale(${lerp(0.8, 1, backOut(prog(t, 0, 0.7)))})`;
+  $("shadow").style.opacity = ci * (0.85 - float / 60);
+  $("shadow").style.transform = `scaleX(${1 - float / 120})`;
+
+  const k = easeOut(prog(t, 0.3, 0.6));
+  $("kicker").style.opacity = k;
+  $("kicker").style.transform = `translateX(${(1 - k) * -30}px)`;
+
+  // 000 -> 500
+  const bp = prog(t, 0.45, 2.0);
+  const n = Math.round(500 * easeOut(bp));
+  $("num").textContent = String(n).padStart(3, "0");
+  $("big").style.opacity = clamp(bp * 4);
+
+  const e = easeOut(prog(t, 2.0, 2.35));
+  $("each").style.opacity = e;
+  $("each").style.transform = `translateY(${(1 - e) * 30}px)`;
+
+  const f = prog(t, 2.45, 2.8);
+  $("free").style.opacity = clamp(f * 3);
+  $("free").style.transform = `scale(${lerp(1.4, 1, backOut(f))})`;
+  $("free").style.transformOrigin = "0% 60%";
+  $("hl").style.width = ($("free").querySelector("span").offsetWidth + 28) * easeOut(prog(t, 2.8, 3.1)) + "px";
+
+  ["s1", "s2", "s3"].forEach((id, i) => {
+    const q = easeOut(prog(t, 3.3 + i * 0.3, 3.6 + i * 0.3));
+    $(id).style.top = STEP_TOPS[i] + (1 - q) * 24 + "px";
+    $(id).style.opacity = q;
+  });
+
+  const tq = easeOut(prog(t, 4.4, 4.9));
+  $("tape").style.transform = `translateY(${(1 - tq) * 100}px)`;
+  $("tapeText").style.transform = `translateX(${-t * 120}px)`;
+};
+
+function fixNumWidth() {
+  const num = $("num"); const keep = num.textContent;
+  num.style.display = "inline-block"; num.style.textAlign = "right"; num.style.width = "auto"; num.textContent = "500";
+  num.style.width = num.offsetWidth + "px"; num.textContent = keep;
+}
+window.ready = Promise.all([document.fonts.ready, new Promise((r) => ($("coin").complete ? r() : ($("coin").onload = r)))]).then(fixNumWidth);
+window.render(+new URLSearchParams(location.search).get("t") || 0);
+</script>
+</body>
+</html>
