@@ -8,7 +8,7 @@
  * Mark winners by typing "approved" in the Status column, then File → Download → CSV.
  */
 const SHEET_NAME = "Entries";
-const CLOSES_AT = ""; // e.g. "2026-11-14T14:00:00Z". Empty = open. After this time new entries are refused.
+const CLOSES_AT = "2026-11-12T14:00:00Z"; // 12 Nov 2026, 21:00 WIB. After this time new entries are refused.
 const MAX_ENTRIES = 20000;
 
 function doGet() {
