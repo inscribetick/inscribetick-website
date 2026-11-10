@@ -24,9 +24,9 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=2">
 <link rel="preload" href="assets/fonts/anton-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <script src="intro.js?v=4"></script>
-<link rel="stylesheet" href="styles.css?v=5">
-<script src="config.js?v=2"></script>
-<script type="module" src="app.js?v=2"></script>
+<link rel="stylesheet" href="styles.css?v=6">
+<script src="config.js?v=3"></script>
+<script type="module" src="app.js?v=3"></script>
 </head>
 <body>
 
@@ -34,6 +34,7 @@
   <div class="wrap">
     <a class="logo" href="#top">$TICK</a>
     <nav class="nav kicker" aria-label="Main">
+      <a class="b3d small" href="#event">Free claim</a>
       <a class="b3d small" href="#supply">Supply</a>
       <a class="b3d small" href="#sequence">Sequence</a>
       <a class="b3d small" href="#trust">Trust</a>
@@ -68,7 +69,7 @@
     <p class="lede">A fair-launch inscription on Elysium. Every paid inscribe costs the same. Every HYPE paid goes into a pool that can never be pulled.</p>
     <div class="ctas">
       <a class="b3d dark" href="TICK_Whitepaper.pdf" target="_blank" rel="noopener">Read the whitepaper</a>
-      <a class="b3d" href="#mint">Go to mint</a>
+      <a class="b3d" href="#event">Join the free claim</a>
     </div>
   </div>
   <aside class="record" aria-label="Inscription record">
@@ -88,6 +89,37 @@
       <div class="row"><span>chain</span><span>Elysium · 99901</span></div>
     </div>
   </aside>
+</section>
+
+<section id="event" class="section event">
+  <div class="wrap">
+    <div class="section-head"><h2>Free claim</h2><span class="kicker">§00 — 500 × 50,000 $TICK</span></div>
+    <div class="event-grid">
+      <div class="event-how">
+        <p class="event-lede">500 early supporters get 50,000 $TICK each, free. Enter in three steps:</p>
+        <ol class="event-steps">
+          <li><span class="n">1</span><span>Repost <a id="eventPostLink" href="https://x.com/ticksdotcom" target="_blank" rel="noopener">our event post on X</a>.</span></li>
+          <li><span class="n">2</span><span>Reply to it with your Elysium wallet address.</span></li>
+          <li><span class="n">3</span><span>Submit the form with the link to your reply.</span></li>
+        </ol>
+        <p class="event-rules">Blue-check accounts only. One entry per X account and per wallet. Every entry is checked by hand; bots, farms and duplicates are removed. Winners can claim on this page when the mint opens. We never ask for a private key, seed phrase or signature.</p>
+        <div class="event-count"><span class="big" id="entryCount">—</span><span class="label">entries so far</span></div>
+        <p class="event-close" id="eventClose"></p>
+      </div>
+      <form class="event-form" id="eventForm" novalidate>
+        <label for="evHandle">X username</label>
+        <input id="evHandle" name="handle" type="text" autocomplete="off" spellcheck="false" placeholder="@yourname" maxlength="16" required>
+        <label for="evWallet">Elysium wallet address</label>
+        <input id="evWallet" name="wallet" type="text" autocomplete="off" spellcheck="false" placeholder="0x…" maxlength="42" required>
+        <label for="evLink">Link to your reply</label>
+        <input id="evLink" name="link" type="url" autocomplete="off" spellcheck="false" placeholder="https://x.com/yourname/status/…" required>
+        <div class="hp" aria-hidden="true"><label for="evWebsite">Website</label><input id="evWebsite" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+        <label class="check"><input id="evConfirm" type="checkbox" required> I reposted the event post and my X account has a blue check.</label>
+        <button type="submit" class="b3d dark" id="evSubmit" disabled>Opening soon</button>
+        <p class="event-msg" id="evMsg" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
 </section>
 
 <section id="supply" class="section">

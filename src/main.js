@@ -14,6 +14,7 @@ import {
 } from "viem";
 import { TICK_MINT_ABI, TICK_TOKEN_ABI } from "./abi.js";
 import { loadClaims, ZERO_ROOT } from "./claims.js";
+import { initEvent } from "./event.js";
 
 const C = window.TICK_CONFIG || {};
 const MAX_INSCRIBES = 7500; // paid
@@ -704,6 +705,7 @@ function boot() {
     return;
   }
   buildDrums();
+  initEvent(C);
   if (C.xHandle) {
     const handle = String(C.xHandle).replace(/^@/, "");
     const x = $("xLink");

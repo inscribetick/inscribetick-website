@@ -72,6 +72,17 @@ With a GitHub Actions workflow, no `CNAME` file is needed in the repository; the
 
 ---
 
+## Free-claim event form (Google Sheets)
+
+The *Free claim* section has an entry form. Entries go to a Google Sheet through a small Google Apps Script:
+
+1. Create a Google Sheet (use the project's Google account).
+2. **Extensions → Apps Script**, delete the sample code, paste `tools/event-sheet.gs`, save.
+3. **Deploy → New deployment → Web app**. Execute as: **Me**. Who has access: **Anyone**. Deploy and allow access.
+4. Copy the **Web app URL** (`https://script.google.com/macros/s/…/exec`) into `entryUrl` in `public/config.js`. Optionally set `eventClosesAt`, and the same time in `CLOSES_AT` inside the script.
+
+The script stores entries as plain text, refuses duplicate X accounts, wallets and reply links, and requires the reply link to come from the entered X account. To pick winners, type `approved` in the Status column, download the sheet as CSV and run `node tools/build-claims.mjs entries.csv --approved`.
+
 ## Free-claim list (500 × 50,000 TICK)
 
 Before the final deployment:

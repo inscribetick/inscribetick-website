@@ -1,6 +1,7 @@
 // Builds public/claims.json (the free-claim winners list) and prints its Merkle root.
 //
 //   node tools/build-claims.mjs winners.txt
+//   node tools/build-claims.mjs entries.csv --approved   (Google Sheet export: only rows marked "approved")
 //
 // winners.txt: one winner per line. Each line must contain one EVM address (0x + 40 hex characters);
 // anything else on the line (an X handle, a comma, a link) is ignored. Duplicates are removed.
@@ -11,6 +12,7 @@ import { getAddress, isAddress } from "viem";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 
 const file = process.argv[2];
+const onlyApproved = process.argv.includes("--approved");
 if (!file) {
   console.error("Usage: node tools/build-claims.mjs winners.txt");
   process.exit(1);
@@ -22,6 +24,7 @@ const skipped = [];
 let dupes = 0;
 lines.forEach((line, i) => {
   if (!line.trim()) return;
+  if (onlyApproved && !/(^|,)\s*"?approved"?\s*(,|$)/i.test(line)) return;
   const found = line.match(/0x[0-9a-fA-F]{40}(?![0-9a-fA-F])/g) || [];
   if (found.length !== 1) return skipped.push(`line ${i + 1}: ${found.length === 0 ? "no address" : "more than one address"} — ${line.trim()}`);
   // A mixed-case address carries a checksum; if it does not match, the address was mistyped.
