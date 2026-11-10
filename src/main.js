@@ -208,10 +208,20 @@ async function connect() {
     state.account = accounts[0] ? getAddress(accounts[0]) : null;
     state.walletChainId = parseInt(await provider.request({ method: "eth_chainId" }), 16);
     say("");
+    // Ask the wallet to switch to (or add) Elysium right away.
+    try {
+      await ensureChain();
+    } catch (e) {
+      say(isRejection(e) ? "Switch your wallet to Elysium (chain ID 99901) to mint." : friendly(e));
+    }
     await readMint();
   } catch (e) {
     say(friendly(e));
   }
+}
+
+function isRejection(e) {
+  return !!e && (e.code === 4001 || e?.data?.originalError?.code === 4001 || e instanceof UserRejectedRequestError);
 }
 
 let listening = null;
@@ -238,20 +248,21 @@ async function ensureChain() {
   try {
     await p.request({ method: "wallet_switchEthereumChain", params: [{ chainId: hex }] });
   } catch (e) {
-    if (e && (e.code === 4902 || e?.data?.originalError?.code === 4902)) {
-      await p.request({
-        method: "wallet_addEthereumChain",
-        params: [{
-          chainId: hex,
-          chainName: "Elysium",
-          nativeCurrency: { name: "HYPE", symbol: "HYPE", decimals: 18 },
-          rpcUrls: [C.rpcUrl],
-          blockExplorerUrls: C.explorerUrl ? [C.explorerUrl] : undefined,
-        }],
-      });
-    } else {
-      throw e;
-    }
+    if (isRejection(e)) throw e;
+    // Unknown network (4902 or a wallet-specific error): add Elysium, then switch to it.
+    await p.request({
+      method: "wallet_addEthereumChain",
+      params: [{
+        chainId: hex,
+        chainName: "Elysium",
+        nativeCurrency: { name: "HYPE", symbol: "HYPE", decimals: 18 },
+        rpcUrls: [C.rpcUrl],
+        blockExplorerUrls: C.explorerUrl ? [C.explorerUrl] : undefined,
+      }],
+    });
+    try {
+      await p.request({ method: "wallet_switchEthereumChain", params: [{ chainId: hex }] });
+    } catch (_) {}
   }
   state.walletChainId = parseInt(await p.request({ method: "eth_chainId" }), 16);
   return state.walletChainId === chain.id;
@@ -431,7 +442,9 @@ function render() {
   }
 
   // header
-  $("connectLabel").textContent = state.account ? short(state.account) : "Connect wallet";
+  $("connectLabel").textContent = !state.account
+    ? "Connect wallet"
+    : state.walletChainId !== chain.id ? "Switch to Elysium" : short(state.account);
 }
 
 function showAddresses() {
@@ -518,7 +531,13 @@ function boot() {
     x.hidden = false;
     $("noticeX").textContent = ` and on X @${handle}`;
   }
-  $("connectBtn").addEventListener("click", () => (state.account ? null : connect()));
+  $("connectBtn").addEventListener("click", async () => {
+    if (!state.account) return connect();
+    if (state.walletChainId !== chain.id) {
+      try { await ensureChain(); say(""); } catch (e) { say(friendly(e)); }
+      render();
+    }
+  });
   $("mintBtn").addEventListener("click", onMintClick);
   $("viewBtn").addEventListener("click", onViewClick);
   $("qtyDec").addEventListener("click", () => { state.qty = Math.max(1, state.qty - 1); render(); });
