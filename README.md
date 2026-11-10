@@ -1,6 +1,6 @@
 # inscribetick.com — $TICK website
 
-A static website: HTML, CSS and one JavaScript file. No server, no database, no third-party scripts.
+A static website: HTML, CSS and one JavaScript file. No server, no database, no third-party scripts. Hosted on GitHub Pages and deployed automatically on every push to `main`.
 
 ```
 public/            ← the folder that goes live
@@ -8,10 +8,10 @@ public/            ← the folder that goes live
   styles.css
   config.js        ← the ONLY file you need to edit
   app.js           ← built from src/ (do not edit directly)
-  _headers         ← security rules for Cloudflare
   TICK_Whitepaper.pdf
   assets/          ← artwork, X preview image, favicons, fonts
 src/               ← source code for app.js
+.github/workflows/pages.yml   ← publishes public/ to GitHub Pages
 ```
 
 ## How it works
@@ -19,48 +19,60 @@ src/               ← source code for app.js
 - **While `tickMint` in `config.js` is empty:** the site runs in *coming soon* mode. The hero counter ticks and the mint button is disabled.
 - **Once `tickMint` holds the TickMint address:** the site reads the contract automatically: countdown to the mint, live progress, price in HYPE, all three contract addresses, wallet connection, minting 1–10 inscribes, a *Build the pool* button after the mint ends, and a refund button if the safety net ever opens.
 
+Security: the page carries its own Content-Security-Policy (scripts only from this site) and refuses to run inside a frame on another site.
+
 ---
 
-## First-time setup (GitHub + Cloudflare Pages)
+## Going live on GitHub Pages
 
-### 1. Secure your accounts first (required)
-Anyone who takes over one of these accounts can replace the mint page with a fake one. Turn on **2FA with an authenticator app** for:
-- your GitHub account,
-- your Cloudflare account,
-- the registrar account where you bought inscribetick.com (also turn on *domain lock*),
-- the email address used for all of the above.
+### 1. Secure your accounts (required)
+Anyone who takes over these accounts can replace the mint page with a fake one. Turn on **2FA with an authenticator app** for:
+- the GitHub account that owns this repository,
+- the registrar account for inscribetick.com (also turn on *domain lock* and keep WHOIS privacy on),
+- the email address used for both.
 
-### 2. Upload to GitHub
-1. Create an account at github.com.
-2. Click **New repository** → name: `inscribetick-website` → choose **Public** (so anyone can inspect the code) → **Create repository**.
-3. On the repository page, click **uploading an existing file**.
-4. Unzip this package and drag the **contents** of the `tick-website` folder (`public`, `src`, `tools`, `package.json`, `package-lock.json`, `README.md`, `.gitignore`) onto the page.
-5. Click **Commit changes**.
+### 2. Repository visibility
+GitHub Pages on a free account only publishes **public** repositories. Either:
+- make this repository public: **Settings → General → Danger Zone → Change visibility → Public**, or
+- keep it private with a paid GitHub plan that includes Pages for private repositories.
 
-### 3. Connect Cloudflare Pages
-1. Create an account at dash.cloudflare.com.
-2. Open **Workers & Pages** → **Create application**. On that screen, look for the small link for **Pages** (it reads roughly "Looking to deploy Pages? Get started").
-3. Choose **Import an existing Git repository** → connect your GitHub account → select `inscribetick-website` → **Begin setup**.
-4. Build settings:
-   - Production branch: `main`
-   - Framework preset: `None`
-   - Build command: `exit 0`
-   - Build output directory: `public`
-5. **Save and Deploy.** Within a minute the site is live on a temporary `….pages.dev` address. Open it and check it.
+The website is public either way; this only controls who can see the source code.
 
-### 4. Connect inscribetick.com
-1. In the Cloudflare dashboard: **Add a domain** → `inscribetick.com` → choose the **Free** plan.
-2. Cloudflare gives you **two nameservers**. In your registrar account, replace the domain's nameservers with those two and save.
-3. Wait until Cloudflare shows the domain as **Active** (usually minutes, at most 24 hours).
-4. Back in the Pages project → **Custom domains** → **Set up a custom domain** → `inscribetick.com`. Repeat for `www.inscribetick.com`. Cloudflare creates the DNS records and HTTPS certificate automatically.
+### 3. Turn on GitHub Pages
+**Settings → Pages → Build and deployment → Source: GitHub Actions.**
 
-Done: inscribetick.com is live in *coming soon* mode.
+Then open the **Actions** tab. The "Deploy to GitHub Pages" workflow runs on every push to `main`; use **Run workflow** to start the first deployment manually. When it finishes, the site is live at the address shown on the Settings → Pages screen.
+
+### 4. Verify the domain (prevents domain takeover)
+For an **organization**: **Organization settings → Pages → Add a domain**. For a **personal account**: **your profile Settings → Pages → Add a domain**.
+
+Enter `inscribetick.com`. GitHub shows a **TXT record**; add it at your registrar's DNS settings, wait a few minutes, then click **Verify**.
+
+### 5. Point inscribetick.com at GitHub Pages
+At your registrar's DNS settings, remove any existing parking/forwarding records for the root domain and `www`, then add:
+
+| Type | Name | Value |
+|---|---|---|
+| A | @ | 185.199.108.153 |
+| A | @ | 185.199.109.153 |
+| A | @ | 185.199.110.153 |
+| A | @ | 185.199.111.153 |
+| AAAA | @ | 2606:50c0:8000::153 |
+| AAAA | @ | 2606:50c0:8001::153 |
+| AAAA | @ | 2606:50c0:8002::153 |
+| AAAA | @ | 2606:50c0:8003::153 |
+| CNAME | www | `OWNER.github.io` (the account that owns this repo, no repository name) |
+
+### 6. Connect the domain in the repository
+**Settings → Pages → Custom domain → `inscribetick.com` → Save.** Once the DNS check passes (minutes to a few hours), tick **Enforce HTTPS**.
+
+With a GitHub Actions workflow, no `CNAME` file is needed in the repository; the custom domain lives in the Pages settings.
 
 ---
 
 ## After the contracts are deployed
 
-On GitHub, open `public/config.js` → click the pencil icon (Edit) → fill in:
+Edit `public/config.js`:
 
 ```js
 tickMint: "0xTICKMINT_ADDRESS",
@@ -69,23 +81,24 @@ explorerUrl: "https://EXPLORER-URL",      // once the official explorer is live
 xHandle: "yourXhandle",
 ```
 
-Click **Commit changes**. Cloudflare deploys the new version automatically in about a minute. Only `tickMint` is required; the TickToken and TickLocker addresses are read from the contract.
+Commit to `main`. The workflow redeploys in about a minute. Only `tickMint` is required; the TickToken and TickLocker addresses are read from the contract.
 
 > Double-check the TickMint address before committing. A wrong address means people send HYPE to the wrong contract.
 
 ## Changing code in `src/`
 
-Requires Node.js on your computer:
+Requires Node.js:
 
 ```bash
 npm install
 npm run build      # regenerates public/app.js
 ```
 
-Then upload the new `public/app.js` to GitHub.
+Commit the new `public/app.js` together with your `src/` changes.
 
 ## Notes
 
 - Supported wallets: any browser wallet (Rabby, MetaMask, OKX, etc.) and the built-in browser of mobile wallet apps. WalletConnect (scanning a QR code from a phone on desktop) is not included yet; it can be added later with a WalletConnect project ID.
 - Mint open/close times on the site follow the visitor's device clock, but the contract always enforces the real rules.
+- GitHub Pages has no built-in DDoS protection beyond GitHub's own network. If needed later, a CDN such as Cloudflare can be placed in front of the domain without moving the hosting.
 - Fonts (Anton, IBM Plex) are under the SIL Open Font License; the licenses are in `public/assets/fonts/`.

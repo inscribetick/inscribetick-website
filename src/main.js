@@ -503,6 +503,12 @@ function friendly(e) {
 // ------------------------------------------------------------------ boot
 
 function boot() {
+  // Refuse to run inside a frame (anti-clickjacking; GitHub Pages cannot send frame headers).
+  if (window.top !== window.self) {
+    document.documentElement.style.display = "none";
+    try { window.top.location = window.self.location.href; } catch (_) {}
+    return;
+  }
   buildDrums();
   if (C.xHandle) {
     const handle = String(C.xHandle).replace(/^@/, "");
