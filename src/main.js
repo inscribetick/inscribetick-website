@@ -204,6 +204,7 @@ async function connect() {
   }
   try {
     const accounts = await provider.request({ method: "eth_requestAccounts" });
+    rememberDisconnected(false);
     setProvider(provider);
     state.account = accounts[0] ? getAddress(accounts[0]) : null;
     state.walletChainId = parseInt(await provider.request({ method: "eth_chainId" }), 16);
@@ -220,6 +221,30 @@ async function connect() {
   }
 }
 
+const DISCONNECTED_KEY = "tick:disconnected";
+function rememberDisconnected(on) {
+  try {
+    if (on) localStorage.setItem(DISCONNECTED_KEY, "1");
+    else localStorage.removeItem(DISCONNECTED_KEY);
+  } catch (_) {}
+}
+function wasDisconnected() {
+  try { return localStorage.getItem(DISCONNECTED_KEY) === "1"; } catch (_) { return false; }
+}
+
+async function disconnect() {
+  const p = state.provider;
+  rememberDisconnected(true);
+  state.provider = null; // stop reacting to this wallet's events
+  if (p) {
+    // Wallets that support it (MetaMask, Rabby, ...) revoke this site's access; others ignore it.
+    try { await p.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] }); } catch (_) {}
+  }
+  Object.assign(state, { account: null, walletChainId: null, mine: 0, balance: null, showBalance: false });
+  say("Wallet disconnected.");
+  render();
+}
+
 function isRejection(e) {
   return !!e && (e.code === 4001 || e?.data?.originalError?.code === 4001 || e instanceof UserRejectedRequestError);
 }
@@ -230,12 +255,14 @@ function setProvider(p) {
   if (listening === p || !p.on) return;
   listening = p;
   p.on("accountsChanged", (accs) => {
+    if (state.provider !== p) return;
     state.account = accs && accs[0] ? getAddress(accs[0]) : null;
     state.mine = 0;
     state.balance = null;
     readMint();
   });
   p.on("chainChanged", (id) => {
+    if (state.provider !== p) return;
     state.walletChainId = parseInt(id, 16);
     render();
   });
@@ -442,6 +469,7 @@ function render() {
   }
 
   // header
+  $("disconnectBtn").hidden = !state.account;
   $("connectLabel").textContent = !state.account
     ? "Connect wallet"
     : state.walletChainId !== chain.id ? "Switch to Elysium" : short(state.account);
@@ -538,6 +566,7 @@ function boot() {
       render();
     }
   });
+  $("disconnectBtn").addEventListener("click", disconnect);
   $("mintBtn").addEventListener("click", onMintClick);
   $("viewBtn").addEventListener("click", onViewClick);
   $("qtyDec").addEventListener("click", () => { state.qty = Math.max(1, state.qty - 1); render(); });
@@ -553,7 +582,7 @@ function boot() {
   // silently restore an already-authorised wallet
   setTimeout(async () => {
     const p = providers[0] ? providers[0].provider : window.ethereum;
-    if (!p) return;
+    if (!p || wasDisconnected()) return;
     try {
       const accs = await p.request({ method: "eth_accounts" });
       if (accs && accs[0]) {

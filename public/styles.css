@@ -62,6 +62,8 @@ a { color: var(--ink); }
 .site-header .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 24px; }
 .logo { display: flex; align-items: center; min-height: 52px; font-family: var(--display); font-size: 26px; text-decoration: none; }
 .nav { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 10px 0 12px; }
+.wallet-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 0 14px; }
+@media (max-width: 480px) { .wallet-btns { gap: 0 12px; } .connect { padding: 0 11px; letter-spacing: .03em; gap: 8px; } }
 .connect { min-height: 44px; padding: 0 18px; font-size: 13px; margin: 8px 6px 12px 0; }
 
 /* Ticker tape */
