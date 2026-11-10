@@ -9,7 +9,7 @@
   root.classList.add("intro-on");
 
   var DURATION = 5.2; // seconds until the Enter button appears
-  var TAPE = " TICK ▲ 1,000,000,000 SUPPLY  /  80% PUBLIC MINT  /  20% LOCKED LP  /  0% TEAM  /  100,000 PER INSCRIBE  /  MAX 10 PER WALLET  /  ELYSIUM  / ";
+  var TAPE = " TICK ▲ 7,500 PAID INSCRIBES  /  500 FREE CLAIMS  /  0% TEAM  /  100,000 PER INSCRIBE  /  MAX 10 PER WALLET  /  LP LOCKED FOREVER  /  ELYSIUM  / ";
   var BANDS = [[314, 370], [384, 442], [456, 514], [528, 586], [600, 654], [670, 726], [742, 794]];
   var RATIO = 784 / 1168;
 

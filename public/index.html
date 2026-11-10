@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https:; base-uri 'self'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>$TICK — One price. One pool. Zero team.</title>
-<meta name="description" content="$TICK is a fair-launch inscription token on Elysium. Everyone mints at the same price, every HYPE paid goes into liquidity that is locked forever, and the team gets 0%.">
+<meta name="description" content="$TICK is a fair-launch inscription token on Elysium. Every paid inscribe costs the same, every HYPE paid goes into liquidity that is locked forever, and the team gets 0%.">
 <link rel="canonical" href="https://inscribetick.com/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://inscribetick.com/">
@@ -23,10 +23,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png?v=2">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=2">
 <link rel="preload" href="assets/fonts/anton-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<script src="intro.js?v=3"></script>
-<link rel="stylesheet" href="styles.css?v=4">
+<script src="intro.js?v=4"></script>
+<link rel="stylesheet" href="styles.css?v=5">
 <script src="config.js?v=2"></script>
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=2"></script>
 </head>
 <body>
 
@@ -55,8 +55,8 @@
 
 <div class="tape" aria-hidden="true">
   <div class="tape-track">
-    <span>&nbsp;TICK ▲ 1,000,000,000 SUPPLY &nbsp;/&nbsp; 80% PUBLIC MINT &nbsp;/&nbsp; 20% LOCKED LP &nbsp;/&nbsp; 0% TEAM &nbsp;/&nbsp; 100,000 PER INSCRIBE &nbsp;/&nbsp; ~$2 IN HYPE &nbsp;/&nbsp; MAX 10 PER WALLET &nbsp;/&nbsp; ELYSIUM 99901 &nbsp;/&nbsp;</span>
-    <span>&nbsp;TICK ▲ 1,000,000,000 SUPPLY &nbsp;/&nbsp; 80% PUBLIC MINT &nbsp;/&nbsp; 20% LOCKED LP &nbsp;/&nbsp; 0% TEAM &nbsp;/&nbsp; 100,000 PER INSCRIBE &nbsp;/&nbsp; ~$2 IN HYPE &nbsp;/&nbsp; MAX 10 PER WALLET &nbsp;/&nbsp; ELYSIUM 99901 &nbsp;/&nbsp;</span>
+    <span>&nbsp;TICK ▲ 7,500 PAID INSCRIBES &nbsp;/&nbsp; 500 FREE CLAIMS &nbsp;/&nbsp; 0% TEAM &nbsp;/&nbsp; 100,000 PER INSCRIBE &nbsp;/&nbsp; ~$2 IN HYPE &nbsp;/&nbsp; MAX 10 PER WALLET &nbsp;/&nbsp; LP LOCKED FOREVER &nbsp;/&nbsp; ELYSIUM 99901 &nbsp;/&nbsp;</span>
+    <span>&nbsp;TICK ▲ 7,500 PAID INSCRIBES &nbsp;/&nbsp; 500 FREE CLAIMS &nbsp;/&nbsp; 0% TEAM &nbsp;/&nbsp; 100,000 PER INSCRIBE &nbsp;/&nbsp; ~$2 IN HYPE &nbsp;/&nbsp; MAX 10 PER WALLET &nbsp;/&nbsp; LP LOCKED FOREVER &nbsp;/&nbsp; ELYSIUM 99901 &nbsp;/&nbsp;</span>
   </div>
 </div>
 
@@ -65,7 +65,7 @@
   <div class="hero-text">
     <h1>$TICK</h1>
     <p class="tagline">One price. One pool.<br>Zero team.</p>
-    <p class="lede">A fair-launch inscription on Elysium. Everyone mints at the same price. Every HYPE paid goes into a pool that can never be pulled.</p>
+    <p class="lede">A fair-launch inscription on Elysium. Every paid inscribe costs the same. Every HYPE paid goes into a pool that can never be pulled.</p>
     <div class="ctas">
       <a class="b3d dark" href="TICK_Whitepaper.pdf" target="_blank" rel="noopener">Read the whitepaper</a>
       <a class="b3d" href="#mint">Go to mint</a>
@@ -93,16 +93,18 @@
 <section id="supply" class="section">
   <div class="wrap">
     <div class="section-head"><h2>Supply</h2><span class="kicker">§01 — Fixed. Can only shrink.</span></div>
-    <div class="alloc" aria-hidden="true"><div></div><div></div></div>
+    <div class="alloc" aria-hidden="true"><div class="a-paid"></div><div class="a-free"></div><div class="a-lp"></div><div class="a-burn"></div></div>
     <table class="ledger">
       <tbody>
-        <tr><th scope="row">Total supply</th><td class="num">1,000,000,000</td><td class="pct">100%</td></tr>
-        <tr><th scope="row">Public mint — 8,000 × 100,000</th><td class="num">800,000,000</td><td class="pct">80%</td></tr>
-        <tr><th scope="row">Locked liquidity</th><td class="num">200,000,000</td><td class="pct">20%</td></tr>
+        <tr><th scope="row">Minted at deploy</th><td class="num">1,000,000,000</td><td class="pct">100%</td></tr>
+        <tr><th scope="row"><i class="key a-paid"></i>Paid mint — 7,500 × 100,000</th><td class="num">750,000,000</td><td class="pct">75%</td></tr>
+        <tr><th scope="row"><i class="key a-free"></i>Free claims — 500 × 50,000</th><td class="num">25,000,000</td><td class="pct">2.5%</td></tr>
+        <tr><th scope="row"><i class="key a-lp"></i>Locked liquidity — 25,000 per paid inscribe</th><td class="num">187,500,000</td><td class="pct">18.75%</td></tr>
+        <tr><th scope="row"><i class="key a-burn"></i>Burned at finalize (at least)</th><td class="num">37,500,000</td><td class="pct">3.75%</td></tr>
         <tr><th scope="row">Team · pre-sale · marketing</th><td class="num">0</td><td class="pct">0%</td></tr>
       </tbody>
     </table>
-    <p style="margin:20px 0 0;font-size:14px">Max 10 inscribes per wallet. 100% of mint funds go to liquidity.</p>
+    <p style="margin:20px 0 0;font-size:14px">Max 10 paid inscribes per wallet. 100% of mint funds go to liquidity. Free claims go to 500 early supporters picked from our X event; the list is fixed in the contract at deployment and published here. Anything unsold or unclaimed is burned, so the final supply is at most 962,500,000.</p>
   </div>
 </section>
 
@@ -112,8 +114,8 @@
     <ol class="seq">
       <li><span class="when">T+0</span><span class="what">You inscribe</span><span class="how">Pay ~$2 in HYPE, receive 100,000 $TICK. Up to 10 times per wallet.</span></li>
       <li><span class="when">T+0</span><span class="what">HYPE stays put</span><span class="how">Held by the mint contract. It has no withdraw function.</span></li>
-      <li><span class="when">≤ T+72h</span><span class="what">Mint closes</span><span class="how">All 8,000 inscribes sold, or 72 hours pass. Whichever is first.</span></li>
-      <li><span class="when">1 TX</span><span class="what">Pool is built</span><span class="how">Anyone calls finalize(). All HYPE + 20% of supply become the $TICK/WHYPE pool.</span></li>
+      <li><span class="when">≤ T+72h</span><span class="what">Mint closes</span><span class="how">All 7,500 paid inscribes sold, or 72 hours pass. Whichever is first. Unsold and unclaimed $TICK is burned.</span></li>
+      <li><span class="when">1 TX</span><span class="what">Pool is built</span><span class="how">Anyone calls finalize(). All HYPE + 25,000 $TICK per paid inscribe become the $TICK/WHYPE pool.</span></li>
       <li><span class="when">FOREVER</span><span class="what">LP is locked</span><span class="how">The locker cannot remove liquidity and cannot be upgraded. Trading opens.</span></li>
     </ol>
   </div>
@@ -147,12 +149,12 @@
     <div class="mint-head">
       <h2>Mint</h2>
       <div class="mint-count">
-        <span class="big" id="mintCount">0 / 8,000</span>
+        <span class="big" id="mintCount">0 / 7,500</span>
         <span class="label">Inscribed</span>
       </div>
     </div>
     <p class="mint-status" id="mintStatus">Coming soon</p>
-    <div class="progress" role="progressbar" aria-label="Mint progress" aria-valuemin="0" aria-valuemax="8000" aria-valuenow="0" id="progress">
+    <div class="progress" role="progressbar" aria-label="Mint progress" aria-valuemin="0" aria-valuemax="7500" aria-valuenow="0" id="progress">
       <div class="fill" id="progressFill"></div>
       <div class="ticks" aria-hidden="true"></div>
     </div>
@@ -194,6 +196,14 @@
         </div>
       </li>
     </ol>
+    <div class="claim-box" id="claimBox">
+      <div class="claim-text">
+        <span class="kicker">Free claim</span>
+        <strong>50,000 $TICK for 500 early supporters</strong>
+        <span id="claimInfo">Winners of the X event can claim here once the mint opens. One claim per wallet.</span>
+      </div>
+      <button type="button" class="b3d dark" id="claimBtn" disabled>Opens with the mint</button>
+    </div>
     <p class="tx-status" id="txStatus" role="status" aria-live="polite"></p>
     <p class="notice">Need HYPE on Elysium? Bridge it from HyperEVM through the official Elysium bridge. The mint date and contract addresses are published only on inscribetick.com<span id="noticeX"></span>. Anything else is fake.</p>
   </div>

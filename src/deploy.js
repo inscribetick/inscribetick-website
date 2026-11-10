@@ -15,6 +15,7 @@ import {
 } from "viem";
 import { TICK_MINT_ABI } from "./abi.js";
 import { TICK_MINT_BYTECODE, TICK_LOCKER_ABI } from "./tickmint-artifact.js";
+import { buildTree, loadClaims, ZERO_ROOT } from "./claims.js";
 
 const C = window.TICK_CONFIG || {};
 const POOL_MANAGER = "0xE2e105d3F7209A9DA11f83cCf3E7398a753823F1"; // Uniswap v4 on Elysium
@@ -159,7 +160,23 @@ function params() {
   }
   const fee = ($("feeRecipient").value || "").trim();
   if (!isAddress(fee)) errors.push("Enter a valid fee recipient address.");
-  return { price, start, duration, fee: isAddress(fee) ? getAddress(fee) : null, errors };
+  // Free-claim list. Soft launch: your own wallet only, so you can test claim(). Final: the published claims.json.
+  let root = ZERO_ROOT;
+  let claimsText = "—";
+  if (st.mode === "soft") {
+    if (st.account) { root = buildTree([st.account]).root; claimsText = "Your wallet only (to test the free claim)"; }
+    else claimsText = "Your wallet only (connect first)";
+  } else if (st.claimsError) {
+    errors.push(st.claimsError);
+  } else if (!st.claims) {
+    errors.push("The free-claim list (claims.json) is not published yet. Publish the winners list first.");
+  } else if (st.claims.count > 500) {
+    errors.push(`The free-claim list has ${st.claims.count} wallets; the maximum is 500.`);
+  } else {
+    root = st.claims.root;
+    claimsText = `${st.claims.count} wallets · root ${root}`;
+  }
+  return { price, start, duration, fee: isAddress(fee) ? getAddress(fee) : null, root, claimsText, errors };
 }
 
 function fmtTime(sec) {
@@ -178,6 +195,7 @@ function refresh() {
   $("sumStart").textContent = st.mode === "soft" ? "3 minutes after you deploy" : fmtTime(p.start);
   $("sumDuration").textContent = st.mode === "soft" ? "10 minutes" : "72 hours";
   $("sumFee").textContent = p.fee || "—";
+  $("sumClaims").textContent = p.claimsText;
   $("sumErrors").textContent = p.errors.join(" ");
   $("deployBtn").disabled = st.busy || !st.account || st.chainId !== chain.id || p.errors.length > 0
     || (st.mode === "final" && !$("confirmFinal").checked);
@@ -211,7 +229,7 @@ async function deploy() {
     const hash = await wallet().deployContract({
       abi: TICK_MINT_ABI,
       bytecode: TICK_MINT_BYTECODE,
-      args: [p.price, BigInt(start), BigInt(p.duration), WHYPE, POOL_MANAGER, p.fee],
+      args: [p.price, BigInt(start), BigInt(p.duration), WHYPE, POOL_MANAGER, p.fee, p.root],
     });
     log(`Deploying… transaction ${hash}`);
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
@@ -221,7 +239,7 @@ async function deploy() {
     const [token, locker] = await Promise.all([read("token"), read("locker")]);
     const entry = {
       mode: st.mode, mint, token, locker, tx: hash, price: p.price.toString(),
-      start, end: start + p.duration, fee: p.fee, deployer: st.account, at: Math.floor(Date.now() / 1000),
+      start, end: start + p.duration, fee: p.fee, root: p.root, deployer: st.account, at: Math.floor(Date.now() / 1000),
     };
     saveHistory([entry, ...loadHistory()]);
     renderHistory();
@@ -267,9 +285,11 @@ function row(label, value) {
 const WAIT_TEXT = {
   MintNotOpen: (e) => `Not open yet. The mint opens at ${fmtTime(e.start)}. Try again after that.`,
   MintStillRunning: (e) => `The mint is still running. Build the pool after ${fmtTime(e.end)}.`,
-  MintClosed: () => "The mint is already closed. Use step 2 to build the pool.",
+  MintClosed: () => "The mint is already closed. Use step 3 to build the pool.",
   WalletLimit: () => "This wallet already minted the maximum in this test. Go to step 2.",
-  AlreadyFinalized: () => "The pool is already built. Use step 3 to check.",
+  AlreadyFinalized: () => "The pool is already built. Use step 4 to check.",
+  AlreadyClaimed: () => "This wallet already claimed in this test. Go to step 3.",
+  NotOnList: () => "This wallet is not on the test list. Use the wallet that deployed the soft launch.",
 };
 
 async function testAction(entry, action, out) {
@@ -278,10 +298,12 @@ async function testAction(entry, action, out) {
     await ensureChain();
     const w = wallet();
     let hash;
-    if (action === "inscribe" || action === "finalize") {
+    if (action === "inscribe" || action === "finalize" || action === "claim") {
       const call = action === "inscribe"
         ? { functionName: "inscribe", args: [2n], value: BigInt(entry.price) * 2n }
-        : { functionName: "finalize", args: [] };
+        : action === "claim"
+          ? { functionName: "claim", args: [[]] } // single-wallet list: the proof is empty
+          : { functionName: "finalize", args: [] };
       // Check with the contract first, so an early click costs nothing.
       let request;
       try {
@@ -300,9 +322,9 @@ async function testAction(entry, action, out) {
       if (r.status !== "success") throw new Error("Transaction failed.");
     }
     const read = (fn) => publicClient.readContract({ address: entry.mint, abi: TICK_MINT_ABI, functionName: fn });
-    const [inscribed, finalized] = await Promise.all([read("inscribed"), read("finalized")]);
+    const [inscribed, finalized, claimed] = await Promise.all([read("inscribed"), read("finalized"), read("claimed")]);
     const liq = await publicClient.readContract({ address: entry.locker, abi: TICK_LOCKER_ABI, functionName: "lockedLiquidity" });
-    out.textContent = `Inscribed: ${inscribed} · Pool built: ${finalized ? "yes" : "no"} · Locked liquidity: ${liq}${finalized && liq > 0n ? "  ✓ soft launch passed" : ""}`;
+    out.textContent = `Inscribed: ${inscribed} · Free claims: ${claimed} · Pool built: ${finalized ? "yes" : "no"} · Locked liquidity: ${liq}${finalized && liq > 0n && claimed > 0n ? "  ✓ soft launch passed" : ""}`;
   } catch (e) {
     out.textContent = friendly(e);
   }
@@ -327,6 +349,7 @@ function renderHistory() {
       row("Mint opens", fmtTime(e.start)),
       row("Mint closes", fmtTime(e.end)),
       row("Fee recipient", e.fee),
+      row("Free-claim root", e.root || "—"),
       row("Deploy tx", e.tx),
     );
     if (e.mode === "soft") {
@@ -334,7 +357,7 @@ function renderHistory() {
       bar.className = "test-bar";
       const out = document.createElement("p");
       out.className = "test-out";
-      out.textContent = "Step 1: after it opens, mint 2. Step 2: after it closes, build the pool. Step 3: locked liquidity must be above 0.";
+      out.textContent = "After it opens: step 1 mint 2, step 2 claim free. After it closes: step 3 build the pool. Step 4: free claims must be 1 and locked liquidity above 0.";
       const mk = (label, action) => {
         const b = document.createElement("button");
         b.type = "button";
@@ -343,7 +366,7 @@ function renderHistory() {
         b.onclick = () => testAction(e, action, out);
         return b;
       };
-      bar.append(mk("1 · Mint 2", "inscribe"), mk("2 · Build the pool", "finalize"), mk("3 · Check", "check"));
+      bar.append(mk("1 · Mint 2", "inscribe"), mk("2 · Claim free", "claim"), mk("3 · Build the pool", "finalize"), mk("4 · Check", "check"));
       card.append(bar, out);
     }
     host.appendChild(card);
@@ -357,6 +380,9 @@ $("modeSoft").addEventListener("click", () => setMode("soft"));
 $("modeFinal").addEventListener("click", () => setMode("final"));
 for (const id of ["price", "start", "feeRecipient", "confirmFinal"]) $(id).addEventListener("input", refresh);
 $("deployBtn").addEventListener("click", deploy);
+loadClaims("../claims.json")
+  .then((c) => { st.claims = c; refresh(); })
+  .catch((e) => { st.claimsError = e.message; refresh(); });
 setMode("soft");
 renderHistory();
 setInterval(refresh, 15000);

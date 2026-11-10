@@ -13,9 +13,12 @@ import {
   UserRejectedRequestError,
 } from "viem";
 import { TICK_MINT_ABI, TICK_TOKEN_ABI } from "./abi.js";
+import { loadClaims, ZERO_ROOT } from "./claims.js";
 
 const C = window.TICK_CONFIG || {};
-const MAX_INSCRIBES = 8000;
+const MAX_INSCRIBES = 7500; // paid
+const FREE_CLAIMS = 500;
+const TOKENS_PER_CLAIM = 50000;
 const MAX_PER_WALLET = 10;
 const TOKENS_PER_INSCRIBE = 100000;
 const DRUM_BANDS = [[314, 370], [384, 442], [456, 514], [528, 586], [600, 654], [670, 726], [742, 794]];
@@ -53,6 +56,11 @@ const state = {
   balance: null,
   busy: false,
   showBalance: false,
+  claimRoot: null,
+  claimed: 0,
+  hasClaimed: false,
+  claims: null, // loaded list (claims.json), only if it matches the contract
+  claimsError: "",
 };
 
 // ------------------------------------------------------------------ counter (hero artwork)
@@ -109,10 +117,11 @@ function setCounter(value) {
 
 let demoValue = 1;
 function counterTick() {
-  const live = hasMint && state.loaded && (state.inscribed > 0 || now() >= state.start);
+  const total = state.inscribed + state.claimed; // paid inscribes + free claims share one inscription counter
+  const live = hasMint && state.loaded && (total > 0 || now() >= state.start);
   if (live) {
     $("receiptTitle").textContent = "Inscribed";
-    setCounter(state.inscribed);
+    setCounter(total);
   } else {
     $("receiptTitle").textContent = "Inscription";
     setCounter(demoValue++);
@@ -128,9 +137,19 @@ async function readMint() {
   try {
     const r = (fn, args) => publicClient.readContract({ address: mintAddress, abi: TICK_MINT_ABI, functionName: fn, args });
     if (!state.loaded) {
-      const [price, start, end, grace, token, locker] = await Promise.all([
-        r("pricePerInscribe"), r("startTime"), r("endTime"), r("FINALIZE_GRACE"), r("token"), r("locker"),
+      const [price, start, end, grace, token, locker, claimRoot] = await Promise.all([
+        r("pricePerInscribe"), r("startTime"), r("endTime"), r("FINALIZE_GRACE"), r("token"), r("locker"), r("claimRoot"),
       ]);
+      state.claimRoot = claimRoot;
+      if (claimRoot !== ZERO_ROOT) {
+        try {
+          const list = await loadClaims("claims.json");
+          if (list && list.root.toLowerCase() === claimRoot.toLowerCase()) state.claims = list;
+          else state.claimsError = "The claim list on this page does not match the contract. Do not claim; report this on X.";
+        } catch (e) {
+          state.claimsError = "The claim list could not be checked. Do not claim; report this on X.";
+        }
+      }
       Object.assign(state, {
         price,
         start: Number(start),
@@ -141,14 +160,17 @@ async function readMint() {
       });
       showAddresses();
     }
-    const [inscribed, finalized] = await Promise.all([r("inscribed"), r("finalized")]);
+    const [inscribed, finalized, claimed] = await Promise.all([r("inscribed"), r("finalized"), r("claimed")]);
     state.inscribed = Number(inscribed);
     state.finalized = finalized;
+    state.claimed = Number(claimed);
     if (state.account) {
-      const [mine, bal] = await Promise.all([
+      const [mine, bal, hasClaimed] = await Promise.all([
         r("inscribedBy", [state.account]),
         publicClient.readContract({ address: state.token, abi: TICK_TOKEN_ABI, functionName: "balanceOf", args: [state.account] }),
+        r("hasClaimed", [state.account]),
       ]);
+      state.hasClaimed = hasClaimed;
       state.mine = Number(mine);
       state.balance = bal;
     }
@@ -412,6 +434,67 @@ async function onMintClick() {
   }
 }
 
+async function onClaimClick() {
+  if (!state.account) return connect();
+  if (state.walletChainId !== chain.id) {
+    try { await ensureChain(); } catch (e) { say(friendly(e)); }
+    return render();
+  }
+  if (!state.claims || !state.claims.has(state.account)) return;
+  const hash = await send("claim", [state.claims.proof(state.account)], 0n, "Claiming 50,000 $TICK…");
+  if (hash) {
+    state.showBalance = true;
+    say("Claimed! 50,000 $TICK is in your wallet.", hash);
+  }
+}
+
+function renderClaim(phase) {
+  const btn = $("claimBtn");
+  const info = $("claimInfo");
+  let label = "Check my wallet";
+  let text = "Winners of the X event can claim here once the mint opens. One claim per wallet.";
+  let enabled = false;
+  const left = FREE_CLAIMS - state.claimed;
+  if (state.claimsError) {
+    text = state.claimsError;
+    label = "Claim unavailable";
+  } else if (phase === "soon") {
+    label = "Opens with the mint";
+  } else if (state.claimRoot === ZERO_ROOT) {
+    text = "There are no free claims in this mint.";
+    label = "No free claims";
+  } else if (!state.claims) {
+    text = "Loading the winners list…";
+  } else if (!state.account) {
+    text = `${fmtInt(state.claims.count)} wallets are on the winners list. Connect to check yours.`;
+    label = "Connect wallet";
+    enabled = phase !== "done";
+  } else if (!state.claims.has(state.account)) {
+    text = "This wallet is not on the winners list.";
+    label = "Not on the list";
+  } else if (state.hasClaimed) {
+    text = "This wallet already claimed its 50,000 $TICK.";
+    label = "Claimed ✓";
+  } else if (state.walletChainId !== chain.id) {
+    text = "You are on the winners list. Switch to Elysium to claim.";
+    label = "Switch to Elysium";
+    enabled = true;
+  } else if (phase === "upcoming") {
+    text = `You are on the winners list. Claiming opens with the mint, in ${countdown(state.start - now())}.`;
+    label = "Opens with the mint";
+  } else if (phase === "open") {
+    if (left <= 0) { text = "All 500 free claims have been taken."; label = "All claimed"; }
+    else { text = `You are on the winners list. ${fmtInt(left)} of ${FREE_CLAIMS} claims left. Gas only, no HYPE payment.`; label = "Claim 50,000 $TICK"; enabled = true; }
+  } else {
+    text = "The claim window has closed. Unclaimed $TICK was burned.";
+    label = "Claim closed";
+  }
+  if (state.busy) enabled = false;
+  info.textContent = text;
+  btn.textContent = label;
+  btn.disabled = !enabled;
+}
+
 async function onViewClick() {
   if (!state.account) return connect();
   if (!state.showBalance) {
@@ -522,13 +605,16 @@ function render() {
   $("mintLabel").textContent = label;
   btn.disabled = !enabled;
 
+  renderClaim(phase);
+
   // view button
   const view = $("viewBtn");
   view.disabled = !(state.account && state.token) || state.busy;
   $("viewLabel").textContent = state.showBalance ? "Add $TICK to wallet" : "View my $TICK";
   if (state.showBalance && state.balance != null) {
     const whole = Number(state.balance / 10n ** 18n);
-    $("successText").textContent = `You hold ${fmtInt(whole)} $TICK from ${state.mine} inscribe${state.mine === 1 ? "" : "s"}. ` +
+    const from = [state.mine ? `${state.mine} inscribe${state.mine === 1 ? "" : "s"}` : "", state.hasClaimed ? "your free claim" : ""].filter(Boolean).join(" + ") || "this wallet";
+    $("successText").textContent = `You hold ${fmtInt(whole)} $TICK from ${from}. ` +
       (state.finalized ? "Trading is open." : "Trading opens once the pool is built.");
   }
 
@@ -589,6 +675,9 @@ const ERROR_TEXT = {
   MintStillRunning: "The mint is still running.",
   FinalizeExpired: "The time to build the pool has passed. Refunds are open.",
   RefundNotAvailable: "Refunds are not available.",
+  NotOnList: "This wallet is not on the winners list.",
+  AlreadyClaimed: "This wallet already claimed.",
+  ClaimsExhausted: "All 500 free claims have been taken.",
   NothingToRefund: "This wallet has nothing to refund.",
 };
 
@@ -633,6 +722,7 @@ function boot() {
   $("disconnectBtn").addEventListener("click", disconnect);
   $("mintBtn").addEventListener("click", onMintClick);
   $("viewBtn").addEventListener("click", onViewClick);
+  $("claimBtn").addEventListener("click", onClaimClick);
   $("qtyDec").addEventListener("click", () => { state.qty = Math.max(1, state.qty - 1); render(); });
   $("qtyInc").addEventListener("click", () => { state.qty = Math.min(Math.max(1, maxQty()), state.qty + 1); render(); });
 

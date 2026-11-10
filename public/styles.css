@@ -107,8 +107,22 @@ a { color: var(--ink); }
 .section-head h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(44px, 6vw, 88px); line-height: .9; text-transform: uppercase; }
 
 .alloc { display: flex; height: 28px; border: 2px solid var(--ink); margin-bottom: 8px; }
-.alloc div:first-child { flex: 80 1 0; background: var(--ink); }
-.alloc div:last-child { flex: 20 1 0; background: var(--signal); border-left: 2px solid var(--ink); }
+.alloc .a-paid { flex: 75 1 0; }
+.alloc .a-free { flex: 2.5 1 0; }
+.alloc .a-lp { flex: 18.75 1 0; }
+.alloc .a-burn { flex: 3.75 1 0; }
+.alloc div + div { border-left: 2px solid var(--ink); }
+.a-paid { background: var(--ink); }
+.a-free { background: var(--signal); background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(17,17,17,.55) 3px 5px); }
+.a-lp { background: var(--signal); }
+.a-burn { background: var(--soft); }
+.ledger .key { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--ink); margin-right: 10px; vertical-align: -1px; }
+.claim-box { margin: 28px 0 0; padding: 20px 22px; border: 2px solid var(--ink); background: var(--card); box-shadow: 5px 5px 0 var(--ink);
+  display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; justify-content: space-between; }
+.claim-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1 1 360px; }
+.claim-text strong { font-family: var(--display); font-weight: 400; font-size: 26px; text-transform: uppercase; line-height: 1.05; }
+.claim-text span:last-child { font-size: 14px; line-height: 1.5; }
+.claim-box .b3d { min-height: 52px; padding: 0 22px; font-size: 14px; }
 .ledger { width: 100%; border-collapse: collapse; font-size: 15px; }
 .ledger tr { border-bottom: 1px solid var(--ink); }
 .ledger tr:last-child { border-bottom: 2px solid var(--ink); }

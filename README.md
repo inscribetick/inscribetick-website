@@ -72,6 +72,20 @@ With a GitHub Actions workflow, no `CNAME` file is needed in the repository; the
 
 ---
 
+## Free-claim list (500 × 50,000 TICK)
+
+Before the final deployment:
+
+1. Put the selected winners in a text file, one per line (each line must contain one `0x…` address; handles or links on the same line are ignored).
+2. Build the list:
+   ```bash
+   node tools/build-claims.mjs winners.txt
+   ```
+   This writes `public/claims.json` and prints the claim root. Duplicates, lines without an address and mistyped addresses (bad checksum) are reported and skipped. Maximum 500 wallets.
+3. Commit `public/claims.json`. The deploy console (Final mode) reads it and puts its root into the contract. After deployment the list can never change.
+
+The site rebuilds the Merkle tree in the visitor's browser and only enables claiming if it matches the root stored in the contract.
+
 ## After the contracts are deployed
 
 Edit `public/config.js`:
