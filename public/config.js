@@ -12,5 +12,5 @@ window.TICK_CONFIG = {
   explorerUrl: "",
 
   // Your X handle without @, e.g. "inscribetick". Leave empty to hide the X link.
-  xHandle: "",
+  xHandle: "ticksdotcom",
 };
