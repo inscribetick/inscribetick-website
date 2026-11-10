@@ -264,16 +264,35 @@ function row(label, value) {
   return div;
 }
 
+const WAIT_TEXT = {
+  MintNotOpen: (e) => `Not open yet. The mint opens at ${fmtTime(e.start)}. Try again after that.`,
+  MintStillRunning: (e) => `The mint is still running. Build the pool after ${fmtTime(e.end)}.`,
+  MintClosed: () => "The mint is already closed. Use step 2 to build the pool.",
+  WalletLimit: () => "This wallet already minted the maximum in this test. Go to step 2.",
+  AlreadyFinalized: () => "The pool is already built. Use step 3 to check.",
+};
+
 async function testAction(entry, action, out) {
   out.textContent = "Working…";
   try {
     await ensureChain();
     const w = wallet();
     let hash;
-    if (action === "inscribe") {
-      hash = await w.writeContract({ address: entry.mint, abi: TICK_MINT_ABI, functionName: "inscribe", args: [2n], value: BigInt(entry.price) * 2n, account: st.account, chain });
-    } else if (action === "finalize") {
-      hash = await w.writeContract({ address: entry.mint, abi: TICK_MINT_ABI, functionName: "finalize", args: [], account: st.account, chain });
+    if (action === "inscribe" || action === "finalize") {
+      const call = action === "inscribe"
+        ? { functionName: "inscribe", args: [2n], value: BigInt(entry.price) * 2n }
+        : { functionName: "finalize", args: [] };
+      // Check with the contract first, so an early click costs nothing.
+      let request;
+      try {
+        ({ request } = await publicClient.simulateContract({ address: entry.mint, abi: TICK_MINT_ABI, account: st.account, ...call }));
+      } catch (e) {
+        const r = e instanceof BaseError ? e.walk((x) => x instanceof ContractFunctionRevertedError) : null;
+        const name = r && r.data && r.data.errorName;
+        if (name && WAIT_TEXT[name]) { out.textContent = WAIT_TEXT[name](entry); return; }
+        throw e;
+      }
+      hash = await w.writeContract(request);
     }
     if (hash) {
       out.textContent = `Waiting for ${short(hash)}…`;
