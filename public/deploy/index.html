@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https:; base-uri 'self'; form-action 'none'; object-src 'none'">
+<meta name="robots" content="noindex, nofollow">
+<title>$TICK — Deploy console</title>
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="deploy.css">
+<script src="../config.js"></script>
+<script type="module" src="deploy.js"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <span class="logo">$TICK · Deploy</span>
+    <button type="button" class="b3d dark connect" id="connectBtn"><span id="connectLabel">Connect wallet</span></button>
+  </div>
+</header>
+<main class="wrap console">
+  <p class="warn">Internal tool. Deploys the $TICK contracts on Elysium mainnet (chain ID 99901) from your connected wallet. Contract settings are permanent once deployed.</p>
+  <div id="walletPick" class="pick"></div>
+
+  <section class="panel">
+    <h2>1 · Choose</h2>
+    <div class="modes">
+      <button type="button" class="b3d" id="modeSoft" aria-pressed="true">Soft launch (test)</button>
+      <button type="button" class="b3d" id="modeFinal" aria-pressed="false">Final launch</button>
+    </div>
+    <p id="softNote" class="note">Test run with tiny amounts: 0.0001 HYPE per inscribe, opens 3 minutes after deploying, closes 10 minutes later. Run it once before the final launch.</p>
+  </section>
+
+  <section class="panel">
+    <h2>2 · Settings</h2>
+    <div id="finalFields" hidden>
+      <label for="usdHelper">HYPE price today (USD) — fills the price for $2 per inscribe</label>
+      <input id="usdHelper" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 40">
+      <label for="start">Mint opens (your local time)</label>
+      <input id="start" type="datetime-local">
+    </div>
+    <label for="price">Price per inscribe (HYPE)</label>
+    <input id="price" type="text" inputmode="decimal" autocomplete="off">
+    <label for="feeRecipient">Fee recipient (receives LP trading fees forever)</label>
+    <input id="feeRecipient" type="text" autocomplete="off" spellcheck="false" placeholder="0x…">
+  </section>
+
+  <section class="panel">
+    <h2>3 · Review &amp; deploy</h2>
+    <div class="summary">
+      <div class="kv"><span>Mode</span><code id="sumMode"></code></div>
+      <div class="kv"><span>Price</span><code id="sumPrice"></code></div>
+      <div class="kv"><span>Mint opens</span><code id="sumStart"></code></div>
+      <div class="kv"><span>Mint window</span><code id="sumDuration"></code></div>
+      <div class="kv"><span>Fee recipient</span><code id="sumFee"></code></div>
+    </div>
+    <p id="sumErrors" class="errors"></p>
+    <label class="check"><input type="checkbox" id="confirmFinal"> For the final launch: I checked the price, opening time and fee recipient. They cannot be changed later.</label>
+    <button type="button" class="b3d dark" id="deployBtn" disabled>Deploy</button>
+    <p id="log" class="log" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="panel" id="historyWrap" hidden>
+    <h2>Deployments from this browser</h2>
+    <div id="history"></div>
+  </section>
+</main>
+</body>
+</html>

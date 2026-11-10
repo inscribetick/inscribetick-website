@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "$TICK website \u2014 inscribetick.com",
   "scripts": {
-    "build": "esbuild src/main.js --bundle --minify --format=esm --target=es2020 --legal-comments=none --outfile=public/app.js"
+    "build": "esbuild src/main.js --bundle --minify --format=esm --target=es2020 --legal-comments=none --outfile=public/app.js && esbuild src/deploy.js --bundle --minify --format=esm --target=es2020 --legal-comments=none --outfile=public/deploy/deploy.js"
   },
   "license": "MIT",
   "dependencies": {
