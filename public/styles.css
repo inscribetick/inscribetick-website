@@ -200,8 +200,26 @@ html.intro-on body > :not(#intro) { visibility: hidden; }
   background-image: repeating-linear-gradient(to right, transparent 0 39px, rgba(17,17,17,.13) 39px 40px);
   display: flex; align-items: center; justify-content: center; transition: opacity .45s ease, transform .45s ease; }
 #intro.leaving { opacity: 0; transform: scale(1.02); pointer-events: none; }
-#intro .intro-video { width: 100%; height: 100%; object-fit: contain; display: block; }
-#intro .intro-video.fill { object-fit: cover; }
+#intro { display: block; overflow: hidden; }
+#intro .intro-stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; font-family: var(--display); color: var(--ink); }
+#intro .intro-card { position: absolute; border: 3px solid var(--ink); background: #EEE7DB; box-shadow: 12px 12px 0 var(--ink); overflow: hidden; }
+#intro .intro-card img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#intro .intro-drum { position: absolute; left: 44.5%; width: 7.9%; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%); }
+#intro .intro-strip { position: absolute; left: 0; right: 0; top: 0; height: 1100%; display: flex; flex-direction: column;
+  font-family: var(--mono); font-weight: 600; line-height: 1; color: var(--signal); will-change: transform; }
+#intro .intro-strip span { height: 9.0909%; display: flex; align-items: center; justify-content: center; }
+#intro .intro-t { position: absolute; white-space: nowrap; text-transform: uppercase; opacity: 0; }
+#intro .intro-title { line-height: .82; letter-spacing: -.01em; }
+#intro .intro-line { line-height: 1.04; }
+#intro .intro-line span { position: relative; z-index: 1; }
+#intro .intro-hl { position: absolute; top: 2%; bottom: -4%; width: 0; background: var(--signal); z-index: 0; }
+#intro .intro-sub { font-family: var(--mono); font-weight: 600; letter-spacing: .08em; }
+#intro .intro-tape { position: absolute; left: 0; right: 0; bottom: 0; height: clamp(40px, 6vh, 64px); background: var(--signal);
+  border-top: 2px solid var(--ink); overflow: hidden; transform: translateY(110%); display: flex; align-items: center; }
+#intro .intro-tape-text { position: absolute; left: 0; white-space: nowrap; font-family: var(--mono); font-weight: 600;
+  font-size: clamp(13px, 1.6vh, 18px); letter-spacing: .04em; will-change: transform; }
 #intro .intro-skip { position: absolute; top: 20px; right: 20px; }
 #intro .intro-enter { position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
   min-height: 56px; padding: 0 28px; font-size: 15px; animation: intro-pop .35s cubic-bezier(.2,1.4,.4,1) backwards; }
